@@ -16,7 +16,7 @@
 # FC='ifort -static-libcxa' F77=$(FC) FFLAGS='-I/usr/local/include' make 
 #   all works fine -- Dave Forrest <drf5n@vims.edu>
  
-FFLAGS = -O
+FFLAGS = -O -g -fcheck=all -Wall
 
 EXEC = adcirc2netcdf
 AD2CDF = adcirc2netcdf
@@ -27,11 +27,10 @@ CDFINCL = -I$(CONDA_PREFIX)/include
 CDFLIBS = -L$(CDFLIBDIR) -lnetcdf -lhdf5 -lhdf5_hl -lnetcdff
  
 SRCS = tides_netcdf.f adcirc2netcdf.f90
-
 OBJS = ${SRCS:.f,.f90=.o}
 
 $(AD2CDF):	$(OBJS)
-	$(FC) -o $(AD2CDF) $(FFLAGS) $(OBJS) $(CDFINCL) $(CDFLIBS) 
+	$(FC) $(FFLAGS) $(OBJS) $(CDFINCL) $(CDFLIBS) -o $(AD2CDF)
 
 convert: $(AD2CDF)
 	LD_LIBRARY_PATH=$(CDFLIBDIR) ./adcirc2netcdf

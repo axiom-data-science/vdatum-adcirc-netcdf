@@ -12,7 +12,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       include 'netcdf.inc'
 c input variables
       integer ne,nn,nface,ntides,nvrt
-      integer ele(3,ne),j
+      integer ele(3,ne)
       real lon(nn),lat(nn),depth(nn),
      & ampl(ntides,nn),phase(ntides,nn),timeanalysis,tidefreqs(ntides)
       real u_amp(ntides,nn,nvrt),v_amp(ntides,nn,nvrt)
@@ -30,25 +30,28 @@ C Netcdf internal variables
       integer tidefreqs_id, ampl_id, phase_id
       integer uamp_id, uphase_id, vamp_id, vphase_id
       integer tidenames_id
-      integer values(8)
 
       logical lu_amp,lu_phase,lv_amp,lv_phase
-
+      logical l_amp,l_phase
 C Set optional variable flags
       lu_amp = .TRUE.
+      l_amp = .TRUE.
       lu_phase = .TRUE.
       lv_amp = .TRUE.
+      l_phase = .TRUE.
       lv_phase = .TRUE.
       if (u_amp(1,1,1).le.0.0) lu_amp=.FALSE.
+      if (ampl(1,1).le.0.0) l_amp=.FALSE.
       if (u_phase(1,1,1).le.0.0) lu_phase=.FALSE.
+      if (phase(1,1).le.0.0) l_phase=.FALSE.
       if (v_amp(1,1,1).le.0.0) lv_amp=.FALSE.
       if (v_phase(1,1,1).le.0.0) lv_phase=.FALSE.
-      
+
 c      save  ele_id, nele_dim
 c      save  lon_id, lat_id, depth_id
 c      save  ampl_id, phase_id
 c      save  tidenames_id, tidefreqs_id
-      
+
 C Check for Triangular mesh or Quadralateral or Mixed
       if (globalstr(1) .eq. "Triangular") then
           nface=3
@@ -58,7 +61,8 @@ C Check for Triangular mesh or Quadralateral or Mixed
 
 C Initialize
 c open file
-      iret = nf_create(netcdf_file, NF_CLOBBER, ncid)
+      iret = nf_create(netcdf_file,
+     & OR(NF_CLASSIC_MODEL, NF_NETCDF4), ncid)
       call check_err(iret)
 c define dimensions
       iret = nf_def_dim(ncid, 'node', nn, node_dim)
@@ -71,7 +75,7 @@ c define dimensions
       call check_err(iret)
       iret = nf_def_dim(ncid, 'charlength', 10, char_dim)
       call check_err(iret)
-      if (lu_amp .or. lu_phase .or. 
+      if (lu_amp .or. lu_phase .or.
      &    lv_amp .or. lv_phase) then
         if (globalstr(2) .eq. "Z" ) then
           iret = nf_def_dim(ncid, 'zgrid', nvrt, nvrt_dim)
@@ -95,9 +99,9 @@ C tidenames
       call check_err(iret)
       iret = nf_put_att_text(ncid, tidenames_id, 'long_name'
      & , 16, 'Tide Constituent')
-      iret = nf_put_att_int(ncid, tidenames_id, 
-     & 'missing_value', NF_INT, 1,-1)
-      iret = nf_put_att_text(ncid, tidenames_id, 'standard_name', 16, 
+      iret = nf_put_att_int(ncid, tidenames_id, 'missing_value',
+     & NF_INT, 1, -1)
+      iret = nf_put_att_text(ncid, tidenames_id, 'standard_name', 16,
      & 'tide_constituent')
       call check_err(iret)
 C tidefreqs
@@ -106,12 +110,12 @@ C tidefreqs
       call check_err(iret)
       iret = nf_put_att_text(ncid, tidefreqs_id, 'long_name'
      & , 14, 'Tide Frequency')
-      iret = nf_put_att_text(ncid, tidefreqs_id, 'units', 14, 
+      iret = nf_put_att_text(ncid, tidefreqs_id, 'units', 14,
      & 'radians/second')
       call check_err(iret)
-      iret = nf_put_att_real(ncid, tidefreqs_id, 
+      iret = nf_put_att_real(ncid, tidefreqs_id,
      & 'missing_value', NF_REAL, 1, -99999.0)
-      iret = nf_put_att_text(ncid, tidefreqs_id, 'standard_name', 14, 
+      iret = nf_put_att_text(ncid, tidefreqs_id, 'standard_name', 14,
      & 'tide_frequency')
       call check_err(iret)
 C ele
@@ -121,7 +125,7 @@ C ele
       call check_err(iret)
       iret = nf_put_att_text(ncid, ele_id, 'long_name'
      & , 33,'Horizontal Element Incidence List')
-      iret = nf_put_att_int(ncid, ele_id, 
+      iret = nf_put_att_int(ncid, ele_id,
      & 'missing_value', NF_INT, 1,-1)
 C lon
       intval(1) = node_dim
@@ -131,7 +135,7 @@ C lon
       call check_err(iret)
       iret = nf_put_att_text(ncid, lon_id, 'units', 12, 'degrees_east')
       call check_err(iret)
-      iret = nf_put_att_text(ncid, lon_id, 'standard_name', 9, 
+      iret = nf_put_att_text(ncid, lon_id, 'standard_name', 9,
      & 'longitude')
 C lat
       iret = nf_def_var(ncid, 'lat', NF_REAL, 1, intval, lat_id)
@@ -140,7 +144,7 @@ C lat
       call check_err(iret)
       iret = nf_put_att_text(ncid, lat_id, 'units', 13, 'degrees_north')
       call check_err(iret)
-       iret = nf_put_att_text(ncid, lat_id, 'standard_name', 8, 
+       iret = nf_put_att_text(ncid, lat_id, 'standard_name', 8,
      & 'latitude')
 C depth
       intval(1) = node_dim
@@ -151,10 +155,10 @@ C depth
       iret = nf_put_att_text(ncid, depth_id,'units',6,'meters')
       iret = nf_put_att_text(ncid, depth_id,'positive',4,'down')
       call check_err(iret)
-       iret = nf_put_att_text(ncid, depth_id, 'standard_name', 5, 
+       iret = nf_put_att_text(ncid, depth_id, 'standard_name', 5,
      & 'depth')
 
-      if (lu_amp .or. lu_phase .or. 
+      if (lu_amp .or. lu_phase .or.
      &    lv_amp .or. lv_phase) then
 C alternative attributes for sigma or zlevel
       if (globalstr(2) .eq. "Z" ) then
@@ -174,7 +178,7 @@ C Zgrid
       elseif (globalstr(2) .eq. "2D" ) then
 C Depth-Averaged
         intval(1) = nvrt_dim
-        iret = nf_def_var(ncid, 'depth-averaged', NF_REAL, 1, 
+        iret = nf_def_var(ncid, 'depth-averaged', NF_REAL, 1,
      &   intval, nvrt_id)
         call check_err(iret)
         iret = nf_put_att_text(ncid, nvrt_id, 'long_name', 37,
@@ -190,7 +194,7 @@ C sigma
         iret = nf_put_att_text(ncid, nvrt_id, 'long_name', 44,
      &   'Sigma Stretched Vertical Coordinate at Nodes')
         call check_err(iret)
-        iret = nf_put_att_text(ncid, nvrt_id, 'units', 11, 
+        iret = nf_put_att_text(ncid, nvrt_id, 'units', 11,
      &   'sigma_level')
         call check_err(iret)
         iret = nf_put_att_text(ncid, nvrt_id, 'positive', 4, 'down')
@@ -203,50 +207,58 @@ C sigma
        endif
 
 C tide amplitude
+      if (l_amp) then
       intval(1) = ntides_dim
       intval(2) = node_dim
       iret = nf_def_var(ncid, 'ampl', NF_REAL, 2, intval, ampl_id)
       call check_err(iret)
-      iret = nf_put_att_text(ncid, ampl_id, 'long_name', 14, 
+      iret = nf_put_att_text(ncid, ampl_id, 'long_name', 14,
      & 'Tide Amplitude')
       call check_err(iret)
       iret = nf_put_att_text(ncid, ampl_id, 'units', 6, 'meters')
       call check_err(iret)
-      iret = nf_put_att_text(ncid, ampl_id, 'tide_analysis', 20, 
+      iret = nf_put_att_text(ncid, ampl_id, 'tide_analysis', 20,
      & tideanalysis)
       call check_err(iret)
-      iret = nf_put_att_real(ncid, ampl_id, 'time_analysis', 1, 
-     & timeanalysis)
-      iret = nf_put_att_real(ncid, ampl_id, 
-     & 'missing_value', NF_REAL, 1,-99999.0)
-      iret = nf_put_att_real(ncid, ampl_id, 
-     & '_FillValue', NF_REAL, 1,-99999.0)
+      iret = nf_put_att_real(ncid, ampl_id, 'time_analysis', NF_REAL,
+     & 1, timeanalysis)
       call check_err(iret)
-      iret = nf_put_att_text(ncid, ampl_id, 'standard_name', 14, 
+      iret = nf_put_att_real(ncid, ampl_id,'missing_value', NF_REAL,
+     & 1, -99999.0)
+      call check_err(iret)
+      iret = nf_put_att_real(ncid, ampl_id, '_FillValue', NF_REAL,
+     & 1, -99999.0)
+      call check_err(iret)
+      iret = nf_put_att_text(ncid, ampl_id, 'standard_name', 14,
      & 'tide_amplitude')
+      endif
 
 C tide phase
+      if (l_phase) then
       intval(1) = ntides_dim
       intval(2) = node_dim
       iret = nf_def_var(ncid, 'phase', NF_REAL, 2,intval, phase_id)
       call check_err(iret)
-      iret = nf_put_att_text(ncid, phase_id, 'long_name', 10, 
+      iret = nf_put_att_text(ncid, phase_id, 'long_name', 10,
      & 'Tide Phase')
       call check_err(iret)
       iret = nf_put_att_text(ncid, phase_id, 'units', 11, 'degrees UTC')
       call check_err(iret)
-      iret = nf_put_att_text(ncid, phase_id, 'tide_analysis', 20, 
+      iret = nf_put_att_text(ncid, phase_id, 'tide_analysis', 20,
      & tideanalysis)
       call check_err(iret)
-      iret = nf_put_att_real(ncid, phase_id, 'time_analysis', 1, 
-     & timeanalysis)
-      iret = nf_put_att_real(ncid, phase_id, 
-     & 'missing_value', NF_REAL, 1,-99999.0)
-      iret = nf_put_att_real(ncid, phase_id, 
-     & '_FillValue', NF_REAL, 1,-99999.0)
+      iret = nf_put_att_real(ncid, phase_id, 'time_analysis', NF_REAL,
+     & 1, timeanalysis)
       call check_err(iret)
-      iret = nf_put_att_text(ncid, phase_id, 'standard_name', 10, 
+      iret = nf_put_att_real(ncid, phase_id, 'missing_value', NF_REAL,
+     & 1, -99999.0)
+      call check_err(iret)
+      iret = nf_put_att_real(ncid, phase_id, '_FillValue', NF_REAL,
+     & 1, -99999.0)
+      call check_err(iret)
+      iret = nf_put_att_text(ncid, phase_id, 'standard_name', 10,
      & 'tide_phase')
+      endif
 
 C u amplitude
       if (lu_amp) then
@@ -271,12 +283,12 @@ C u amplitude
 
 C v amplitude
       if (lv_amp) then
-C     intval(1) = ntides_dim
-C     intval(2) = node_dim
-C     intval(3) = nvrt_dim
-      intval(2) = nvrt_dim
-      intval(2) = node_dim
       intval(1) = ntides_dim
+      intval(2) = node_dim
+      intval(3) = nvrt_dim
+C     intval(2) = nvrt_dim
+C     intval(2) = node_dim
+C     intval(1) = ntides_dim
       iret = nf_def_var(ncid, 'v_amp', NF_REAL, 3, intval, vamp_id)
       call check_err(iret)
       iret = nf_put_att_text(ncid, vamp_id, 'long_name'
@@ -295,12 +307,12 @@ C     intval(3) = nvrt_dim
 
 C u phase
       if (lu_phase) then
-C     intval(1) = ntides_dim
-C     intval(2) = node_dim
-C     intval(3) = nvrt_dim
-      intval(3) = nvrt_dim
-      intval(2) = node_dim
       intval(1) = ntides_dim
+      intval(2) = node_dim
+      intval(3) = nvrt_dim
+C     intval(3) = nvrt_dim
+C     intval(2) = node_dim
+C     intval(1) = ntides_dim
       iret = nf_def_var(ncid, 'u_phase', NF_REAL, 3, intval, uphase_id)
       call check_err(iret)
       iret = nf_put_att_text(ncid, uphase_id, 'long_name'
@@ -373,8 +385,8 @@ C Global Attributes
       iret = nf_put_att_text(ncid, NF_GLOBAL,'references'
      & ,len_trim(globalstr(9)),globalstr(9))
       call check_err(iret)
-      
-c  END DEFINITIONS 
+
+c  END DEFINITIONS
       iret = nf_enddef(ncid)
       call check_err(iret)
       write(*,*) 'End definitions'
@@ -417,12 +429,15 @@ c  2-D fields nodal
       CORNER(2) = 1
       COUNT(2)=nn
       COUNT(1)=ntides
+      if (l_amp) then
       iret=nf_put_vara_real(ncid,ampl_id,CORNER,COUNT,ampl)
       call check_err(iret)
+      endif
+      if (l_phase) then
       iret=nf_put_vara_real(ncid,phase_id,CORNER,COUNT,phase)
       call check_err(iret)
+      endif
       write(*,*) 'starting the velocity write',nvrt,nn,ntides
-
 c  write ampl, phase for velocities
       CORNER(1) = 1
       CORNER(2) = 1
@@ -450,14 +465,14 @@ c  write ampl, phase for velocities
 c  close file
       iret = nf_close(ncid)
       call check_err(iret)
-      write(*,*) 'Close ',netcdf_file 
-      
+      write(*,*) 'Close ',netcdf_file
+
       return
       end
 
 
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-      
+
       subroutine check_err(iret)
       integer iret
       include 'netcdf.inc'

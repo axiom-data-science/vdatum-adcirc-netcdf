@@ -1,0 +1,17 @@
+Latest Tidal Solution w/ Grid 
+ -Results from 120 Simulation w/ 30 day ramp
+ -90 Day Harmonic Analysis w/ 8 constituents
+		-O1
+		-M2
+		-S2
+		-N2
+		-K1
+		-Q1
+		-P1
+		-K2
+ -.035 Manning's n in Aleutian Islands
+ -fort.14 - Mesh (Latest)
+ -fort.13 - Nodal Values (Friction/WetDry State/etc)
+ -fort.53 - Tidal Decomposition Solution
+ -Validation Results at http://www3.nd.edu/~bjoyce/alaska/
+

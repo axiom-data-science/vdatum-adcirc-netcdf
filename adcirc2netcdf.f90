@@ -1,4 +1,4 @@
-      program adcirc2netcdf
+ program adcirc2netcdf
 
 !-----------------------------------------------------------------------
 !  PURPOSE: transform harmonic analysis files from ADCIRC (fort.53)
@@ -10,7 +10,7 @@
       real*4, pointer :: lon(:), lat(:), depth(:)
       real*4 nodefactor,equilarg,freq37(37),wavespeed37(37)
       integer, pointer :: nm(:,:), match(:)
-      integer ncid,ne,np,nfreq,nnodes,n,num,nface,ntype,nvrt
+      integer ncid,ne,np,nfreq,nnodes,num,nface,ntype,nvrt
       character*10, pointer :: freqname(:)
       character*80 netcdf_file*80, gridtitle*24, tide_analysis*24
       character freqname37(37)*10
@@ -28,11 +28,11 @@
      & '2SM2','M3','L2','2MK3','K2','M8','MS4'/
       data wavespeed37/28.9841042,30.0000000,28.4397295,15.0410686,&
      & 57.9682084,13.9430356,86.9523127,44.0251729,60.0000000,&
-     & 57.4238337,28.5125831,90.0000000,27.9682084,27.8953548,&
+     & 57.4238338,28.5125831,90.0000000,27.9682084,27.8953548,&
      & 16.1391017,29.4556253,15.0000000,14.4966939,15.5854433,&
-     & 0.5443747,0.0821373,0.0410686,1.0158958,1.0980331,13.4715145,&
+     & 0.5443847,0.0821383,0.0410686,1.0158958,1.0980331,13.4715145,&
      & 13.3986609,29.9589333,30.0410667,12.8542862,14.9589314,&
-     & 31.0158958,43.4761563,29.5284789,42.9271398,30.0821373,&
+     & 31.0158958,43.4761563,29.5284789,42.9271398,30.0821383,&
      & 115.9364166,58.9841042/
 
       do i=1,37
@@ -161,6 +161,9 @@
       READ(15,*) NOLICA
       READ(15,*) NOLICAT
       READ(15,*) NWP
+      do i=1,NWP
+         read(15,*)
+      enddo
       READ(15,*) NCOR
       READ(15,*) NTIP
       READ(15,*) NWS
@@ -351,4 +354,3 @@
 
       RETURN 
       END
-
